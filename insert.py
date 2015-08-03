@@ -34,6 +34,37 @@ def main():
         name = args.name
     if args.email != '':
         email = args.email
+        
+    if mode == True:
+        add_user(name, email, details)
+    else:
+        update_user(name, email, details)
+
+
+def add_user(name, email, details):
+    if name != '':
+        update_name(name, details)
+    elif email != '':
+        update_email(email, details)
+    create_unique_code(details)
+
+def update_user(name, email, details):
+    if name != '':
+        update_name(name, details)
+    elif email != '':
+        update_email(email, details)
+        
+        
+def update_name(name, details):
+    pass
+    # TODO: Insert someones name
+
+def update_email(email, details):
+    pass
+    # TODO: Insert someones email     
+        
+def create_unique_code(details):
+    pass
 
 
 if __name__ == '__main__':
