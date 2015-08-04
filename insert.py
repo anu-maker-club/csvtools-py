@@ -18,21 +18,24 @@ def main():
 
     args = p.parse_args()
 
+    if args.code == '':
+        raise IOError("You must specify a code to update details")
+    else:
+        code = args.code
+
     if not (args.add and args.update):
-        raise IOError("Only specify one mode")
+        raise IOError('Please specify a mode')
     elif args.add and args.update:
-        raise IOError("Only specify whether insert mode or add mode.")
+        raise IOError('Only specify whether insert mode or add mode.')
     elif args.user:
         mode = True
     elif args.details:
-        if args.code == '':
-            raise IOError("You must specify a code to update details")
         mode = False
     else:
-        raise IOError("Only specify add or update mode.")
+        raise IOError('Only specify add or update mode.')
 
     if (args.input == '') or not reader.file_exists(args.input):
-        raise IOError("Please point to a csv file")
+        raise IOError('Please point to a csv file')
     else:
         filename = args.input
 
@@ -47,50 +50,36 @@ def main():
 
     details = reader.open_csv_file(filename)
 
-    if mode == True:
-        add_user(name, email, details)
+    if mode:
+        details = add_user(name, email, details)
     else:
-        update_user(name, email, details)
+        details = update_user(name, email, code, details)
+
+    reader.write_csv_file(details, filename)
 
 
 def add_user(name, email, details):
-    if name != '':
-        add_name(name, details)
-    elif email != '':
-        add_email(email, details)
-    create_unique_code(details)
+    code = reader.generate_unique_code(details)
+    new_user = {}
+    if name == '':
+        new_user['name'] = name
+    if email == '':
+        new_user['email'] = email
+    new_user['code'] = code
+    new_user['uid'] = ''
+
+    details.append(new_user)
+    return details
 
 
-def update_user(name, email, details):
-    if name != '':
-        update_name(name, details)
-    elif email != '':
-        update_email(email, details)
-
-
-def add_name(name, details):
-    pass
-    # TODO: Insert someones name
-
-
-def add_email(email, details):
-    pass
-    # TODO: Insert someones email
-
-
-def update_name(name, details):
-    pass
-    # TODO: Insert someones name
-
-
-def update_email(email, details):
-    pass
-    # TODO: Insert someones email     
-
-
-def create_unique_code(details):
-    pass
-    # TODO: Create a unique ID
+def update_user(name, email, code, details):
+    for line in details:
+        if code == line.get('code'):
+            if email != '':
+                line['email'] = email
+            if name == '':
+                line['name'] = name
+    return details
 
 
 if __name__ == '__main__':
