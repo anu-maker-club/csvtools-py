@@ -4,6 +4,7 @@ __author__ = 'jay'
 
 import argparse
 import reader
+import sys
 
 
 def main():
@@ -39,14 +40,12 @@ def main():
     if args.name != '':
         name = args.name
     else:
-        name = None
+        name = ''
     if args.email != '':
         email = args.email
     else:
-        email = None
+        email = ''
 
-    print(name)
-    print(email)
     details = reader.open_csv_file(filename)
 
     if mode:
@@ -56,20 +55,22 @@ def main():
 
     reader.write_csv_file(details, filename)
 
+    sys.exit(0)
+
 
 def add_user(name, email, details):
     code = reader.generate_unique_code(details)
     new_user = {}
-    if name != None:
+    if name != '':
         new_user['name'] = name
     else:
-        new_user['name'] = None
-    if email != None:
+        new_user['name'] = ''
+    if email != '':
         new_user['email'] = email
     else:
-        new_user['email'] = None
+        new_user['email'] = ''
     new_user['code'] = code
-    new_user['uid'] = None
+    new_user['uid'] = ''
 
     details.append(new_user)
     return details
@@ -78,9 +79,9 @@ def add_user(name, email, details):
 def update_user(name, email, code, details):
     for line in details:
         if code == line.get('code'):
-            if email != None:
+            if email != '':
                 line['email'] = email
-            if name != None:
+            if name != '':
                 line['name'] = name
     return details
 
