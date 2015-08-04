@@ -38,7 +38,7 @@ def main():
 def generate_email_data(row, message, subject):
     """
     Creates all the data we need to send an email. Specific values can be inserted with tags. eg to insert the
-    persons name use  {name} in the plaintext email to insert the name, use {email} to insert their email address etc.
+    persons name use {name} in the plaintext email to insert the name, use {email} to insert their email address etc.
     :param row: A dict containing information about the user we are sending the email to.
     :param message: String representing the message to be sent by email.
     :param subject: String representing the subject line for the email.
