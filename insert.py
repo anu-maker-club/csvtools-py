@@ -11,29 +11,36 @@ def main():
     p = argparse.ArgumentParser(description="Inserts information into CSV files, will overwrite information!")
     p.add_argument('-n', '--name', metavar='name', default='', type=str, help='The name to insert.')
     p.add_argument('-e', '--email', metavar='email', default='', type=str, help='The email address to insert.')
-    p.add_argument('-u', '--user', metavar='user', type=str, default='', help='Add user mode.')
+    p.add_argument('-u', '--user', metavar='user', default='', type=str, help='Add user mode[update, add].')
     p.add_argument('-i', '--input', metavar='input', help='The csv file')
-    p.add_argument('-c', '--code', metavar='code', type=str, help='Code uniquely identifies user, use when inserting'
-                                                                  ' or updating new information.')
+    p.add_argument('-c', '--code', metavar='code', default='', type=str, help='Code uniquely identifies user, '
+                                                                              'use when inserting or updating '
+                                                                              'new information.')
 
     args = p.parse_args()
 
-    if args.code == '':
-        raise IOError("You must specify a code to update details")
-    else:
-        code = args.code
-
     if args.user == 'update':
         mode = False
+        if args.code == '':
+            print('You must specify a code when updating.')
+            sys.exit(2)
+        else:
+            code = args.code
     elif args.user == 'add':
         mode = True
+        if args.name == '' and args.email == '':
+            print('At least 1 of name or email must be specified when creating a new member.')
+            sys.exit(2)
     elif not (args.user == 'add' or args.user == 'update'):
-        raise IOError('Please specify a mode')
+        print('You must specify a single mode with -u [update, add].')
+        sys.exit(2)
     else:
-        raise IOError('Only specify add or update mode.')
+        print('You must specify a single mode with -u [update, add].')
+        sys.exit(2)
 
     if (args.input == '') or not reader.file_exists(args.input):
-        raise IOError('Please point to a csv file')
+        print('File does not exist.')
+        sys.exit(2)
     else:
         filename = args.input
 
