@@ -2,7 +2,6 @@
 
 __author__ = 'jay'
 
-import os.path
 import argparse
 import sys
 import reader
@@ -22,9 +21,8 @@ def main():
     for line in sys.stdin:
         std_input += line
 
-
     emails = []
-    if file_exists(filename):
+    if reader.file_exists(filename):
         readings = reader.open_csv_file(filename)
 
         for row in readings:
@@ -38,6 +36,14 @@ def main():
 
 
 def generate_email_data(row, message, subject):
+    """
+    Creates all the data we need to send an email. Specific values can be inserted with tags. eg to insert the
+    persons name use  {name} in the plaintext email to insert the name, use {email} to insert their email address etc.
+    :param row: A dict containing information about the user we are sending the email to.
+    :param message: String representing the message to be sent by email.
+    :param subject: String representing the subject line for the email.
+    :return: Dict containing all information needed to send an email.
+    """
     if 'name' not in row or row.get('name') == '':  # User has not inserted their name into database yet use uid again
         message = message.format(uid=row.get('uid'), code=row.get('code'), name=row.get('uid'))
         subject = subject.format(uid=row.get('uid'), code=row.get('code'), name=row.get('uid'))
@@ -46,12 +52,6 @@ def generate_email_data(row, message, subject):
         subject = subject.format(uid=row.get('uid'), code=row.get('code'), name=row.get('name'))
 
     return {'message': message, 'email': row.get('email'), 'subject': subject}
-
-
-def file_exists(filename):
-    if os.path.isfile(filename):
-        return True
-    return False
 
 
 if __name__ == '__main__':
