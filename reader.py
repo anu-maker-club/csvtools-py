@@ -92,7 +92,7 @@ def open_csv_file(filename):
 
 def write_csv_file(content, output_name):
     with open(output_name, 'w', newline='') as output:
-        writer = csv.DictWriter(output, fieldnames=['email', 'code', 'uid', 'name'])
+        writer = csv.DictWriter(output, fieldnames=['code', 'email', 'name', 'uid'])
         writer.writeheader()
         for row in content:
             writer.writerow(row)
