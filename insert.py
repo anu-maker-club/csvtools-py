@@ -10,8 +10,7 @@ def main():
     p = argparse.ArgumentParser(description="Inserts information into CSV files, will overwrite information!")
     p.add_argument('-n', '--name', metavar='name', default='', type=str, help='The name to insert.')
     p.add_argument('-e', '--email', metavar='email', default='', type=str, help='The email address to insert.')
-    p.add_argument('-d', '--details', metavar='details', type=bool, default=False, help='Update details mode.')
-    p.add_argument('-u', '--user', metavar='user', type=bool, default=False, help='Add user mode.')
+    p.add_argument('-u', '--user', metavar='user', type=str, default='', help='Add user mode.')
     p.add_argument('-i', '--input', metavar='input', help='The csv file')
     p.add_argument('-c', '--code', metavar='code', type=str, help='Code uniquely identifies user, use when inserting'
                                                                   ' or updating new information.')
@@ -23,14 +22,12 @@ def main():
     else:
         code = args.code
 
-    if not (args.add and args.update):
-        raise IOError('Please specify a mode')
-    elif args.add and args.update:
-        raise IOError('Only specify whether insert mode or add mode.')
-    elif args.user:
-        mode = True
-    elif args.details:
+    if args.user == 'update':
         mode = False
+    elif args.user == 'add':
+        mode = True
+    elif not (args.user == 'add' or args.user == 'update'):
+        raise IOError('Please specify a mode')
     else:
         raise IOError('Only specify add or update mode.')
 
@@ -42,12 +39,14 @@ def main():
     if args.name != '':
         name = args.name
     else:
-        name = ''
+        name = None
     if args.email != '':
         email = args.email
     else:
-        email = ''
+        email = None
 
+    print(name)
+    print(email)
     details = reader.open_csv_file(filename)
 
     if mode:
@@ -61,12 +60,16 @@ def main():
 def add_user(name, email, details):
     code = reader.generate_unique_code(details)
     new_user = {}
-    if name == '':
+    if name != None:
         new_user['name'] = name
-    if email == '':
+    else:
+        new_user['name'] = None
+    if email != None:
         new_user['email'] = email
+    else:
+        new_user['email'] = None
     new_user['code'] = code
-    new_user['uid'] = ''
+    new_user['uid'] = None
 
     details.append(new_user)
     return details
@@ -75,9 +78,9 @@ def add_user(name, email, details):
 def update_user(name, email, code, details):
     for line in details:
         if code == line.get('code'):
-            if email != '':
+            if email != None:
                 line['email'] = email
-            if name == '':
+            if name != None:
                 line['name'] = name
     return details
 
