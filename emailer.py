@@ -2,10 +2,10 @@
 
 __author__ = 'jay'
 
-import csv
 import os.path
 import argparse
 import sys
+import reader
 from subprocess import call
 
 
@@ -22,13 +22,10 @@ def main():
     for line in sys.stdin:
         std_input += line
 
-    readings = []
+
     emails = []
     if file_exists(filename):
-        with open(filename, 'r') as csv_file:
-            reader = csv.DictReader(csv_file, delimiter=',')
-            for row in reader:
-                readings.append(row)
+        readings = reader.open_csv_file(filename)
 
         for row in readings:
             emails.append(generate_email_data(row, std_input, subject_line))

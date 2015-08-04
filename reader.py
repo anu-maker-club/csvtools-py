@@ -39,7 +39,7 @@ def file_exists(filename):
 
 def set_name(details):
     for entry in details:
-        if 'name' not in entry or entry.get('code') == '':
+        if 'name' not in entry or entry.get('name') == '':
             entry['name'] = ''
     return details
 
