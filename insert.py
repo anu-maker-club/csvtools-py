@@ -69,18 +69,21 @@ def main():
 def add_user(name, email, details):
     code = reader.generate_unique_code(details)
     new_user = {}
+
     if name != '':
         new_user['name'] = name
     else:
         new_user['name'] = ''
+
     if email != '':
         new_user['email'] = email
     else:
         new_user['email'] = ''
+
     if re.match("^u[\d][\d][\d][\d][\d][\d][\d]\@", email):
         new_user['uid']  = email.split('@')[0]
-    new_user['code'] = code
 
+    new_user['code'] = code
 
     details.append(new_user)
     return details
