@@ -80,8 +80,8 @@ def add_user(name, email, details):
     else:
         new_user['email'] = ''
 
-    if re.match("^u[\d][\d][\d][\d][\d][\d][\d]\@", email):
-        new_user['uid']  = email.split('@')[0]
+    if re.match("^u[\d][\d][\d][\d][\d][\d][\d]@", email):
+        new_user['uid'] = email.split('@')[0]
 
     new_user['code'] = code
 
@@ -96,7 +96,7 @@ def update_user(name, email, code, details):
                 line['email'] = email
             if name != '':
                 line['name'] = name
-            if line.get('uid') == '' and re.match('^u[\d][\d][\d][\d][\d][\d][\d]\@', email):
+            if line.get('uid') == '' and re.match('^u[\d][\d][\d][\d][\d][\d][\d]@', email):
                 line['uid'] = email.split('@')[0]
     return details
 
