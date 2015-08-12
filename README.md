@@ -1,5 +1,6 @@
 csvtools-py
-=========== 
+===========
+
 
 reader.py
 ---------
@@ -10,5 +11,14 @@ reader.py [-i, --input] [-o, --output]
 
 emailer.py
 ----------
+Will take a csv file, a subject line and a message and will automatically email a personalised copy of the message to everyone in the scv file.
+If the message contains tags that are in the csv file as headers it will insert them into the message to personalise it. An example
+is Hello {name}.
+###USAGE:
+emailer.py [-i, --input] [-s --subject] message is redirected from standard input eg < message.txt or <<< "Your message"
+
 insert.py
 ---------
+Inserts values into a csv file
+###USAGE:
+insert.py [-n --name][-e --email][-i --input][-c --code][-u --user]
