@@ -24,7 +24,7 @@ def main():
     if file_exists(filename):
         student_details = open_csv_file(filename)
         student_details = add_email(student_details)
-        student_details = add_code(student_details)
+        student_details = add_id(student_details)
         student_details = set_name(student_details)
         write_csv_file(student_details, output)
     else:
@@ -44,23 +44,23 @@ def set_name(details):
     return details
 
 
-def add_code(details):
+def add_id(details):
     for entry in details:
-        if 'code' not in entry or entry.get('code') == '':  # If they have a code already skip them
-            entry['code'] = generate_unique_code(details)
+        if 'id' not in entry or entry.get('id') == '':  # If they have a id already skip them
+            entry['id'] = generate_unique_id(details)
     return details
 
 
-def generate_unique_code(details):
-    code = code_generator()  # Go through the entries to verify the code is
+def generate_unique_id(details):
+    id = id_generator()  # Go through the entries to verify the id is
     for entry in details:  # truly unique, we cant trust the randomness.
-        if 'code' in entry:  # If code exists.
-            while code == entry.get('code'):  # Check if it is the same.
-                code = code_generator()
-    return code
+        if 'id' in entry:  # If id exists.
+            while id == entry.get('id'):  # Check if it is the same.
+                id = id_generator()
+    return id
 
 
-def code_generator(size=6, chars=string.ascii_uppercase + string.digits):
+def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
 
 
@@ -92,7 +92,7 @@ def open_csv_file(filename):
 
 def write_csv_file(content, output_name):
     with open(output_name, 'w', newline='') as output:
-        writer = csv.DictWriter(output, fieldnames=['code', 'email', 'name', 'uid'])
+        writer = csv.DictWriter(output, fieldnames=['id', 'email', 'name', 'uid'])
         writer.writeheader()
         for row in content:
             writer.writerow(row)

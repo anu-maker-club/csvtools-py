@@ -45,11 +45,11 @@ def generate_email_data(row, message, subject):
     :return: Dict containing all information needed to send an email.
     """
     if 'name' not in row or row.get('name') == '':  # User has not inserted their name into database yet use uid again
-        message = message.format(uid=row.get('uid'), code=row.get('code'), name=row.get('uid'))
-        subject = subject.format(uid=row.get('uid'), code=row.get('code'), name=row.get('uid'))
+        message = message.format(uid=row.get('uid'), id=row.get('id'), name=row.get('uid'))
+        subject = subject.format(uid=row.get('uid'), id=row.get('id'), name=row.get('uid'))
     else:
-        message = message.format(uid=row.get('uid'), code=row.get('code'), name=row.get('name'))
-        subject = subject.format(uid=row.get('uid'), code=row.get('code'), name=row.get('name'))
+        message = message.format(uid=row.get('uid'), id=row.get('id'), name=row.get('name'))
+        subject = subject.format(uid=row.get('uid'), id=row.get('id'), name=row.get('name'))
 
     return {'message': message, 'email': row.get('email'), 'subject': subject}
 

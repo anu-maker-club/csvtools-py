@@ -14,7 +14,7 @@ def main():
     p.add_argument('-e', '--email', metavar='email', default='', type=str, help='The email address to insert.')
     p.add_argument('-u', '--user', metavar='user', default='', type=str, help='Add user mode[update, add].')
     p.add_argument('-i', '--input', metavar='input', help='The csv file')
-    p.add_argument('-c', '--code', metavar='code', default='', type=str, help='Code uniquely identifies user, '
+    p.add_argument('-c', '--id', metavar='id', default='', type=str, help='id uniquely identifies user, '
                                                                               'use when inserting or updating '
                                                                               'new information.')
 
@@ -22,11 +22,11 @@ def main():
 
     if args.user == 'update':
         mode = False
-        if args.code == '':
-            print('You must specify a code when updating.')
+        if args.id == '':
+            print('You must specify a id when updating.')
             sys.exit(2)
         else:
-            code = args.code
+            id = args.id
     elif args.user == 'add':
         mode = True
         if args.name == '' and args.email == '':
@@ -59,7 +59,7 @@ def main():
     if mode:
         details = add_user(name, email, details)
     else:
-        details = update_user(name, email, code, details)
+        details = update_user(name, email, id, details)
 
     reader.write_csv_file(details, filename)
 
@@ -67,7 +67,7 @@ def main():
 
 
 def add_user(name, email, details):
-    code = reader.generate_unique_code(details)
+    id = reader.generate_unique_id(details)
     new_user = {}
 
     if name != '':
@@ -80,23 +80,23 @@ def add_user(name, email, details):
     else:
         new_user['email'] = ''
 
-    if re.match("^u[\d][\d][\d][\d][\d][\d][\d]\@", email):
-        new_user['uid']  = email.split('@')[0]
+    if re.match("^u[\d][\d][\d][\d][\d][\d][\d]@", email):
+        new_user['uid'] = email.split('@')[0]
 
-    new_user['code'] = code
+    new_user['id'] = id
 
     details.append(new_user)
     return details
 
 
-def update_user(name, email, code, details):
+def update_user(name, email, id, details):
     for line in details:
-        if code == line.get('code'):
+        if id == line.get('id'):
             if email != '':
                 line['email'] = email
             if name != '':
                 line['name'] = name
-            if line.get('uid') == '' and re.match('^u[\d][\d][\d][\d][\d][\d][\d]\@', email):
+            if line.get('uid') == '' and re.match('^u[\d][\d][\d][\d][\d][\d][\d]@', email):
                 line['uid'] = email.split('@')[0]
     return details
 
