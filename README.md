@@ -21,4 +21,7 @@ insert.py
 ---------
 Inserts values into a csv file
 ###USAGE:
-insert.py [-n --name][-e --email][-i --input][-c --code][-u --user]
+To insert details to an account that already exists
+insert.py -u update [-n --name][-e --email][-i --input][-c --id]
+To insert details of a new user
+insert.py -u add [-n --name][-e --email][-i --input]
