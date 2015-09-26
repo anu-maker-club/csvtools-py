@@ -83,10 +83,16 @@ def open_csv_file(filename):
     :returns: list of dictionaries with headers as keys to the dict
     """
     readings = []
+    i = 0
+    fields = ['id', 'email', 'name', 'uid']
     with open(filename, 'r', newline='') as csv_file:
-        reader = csv.DictReader(csv_file, delimiter=',')
+        reader = csv.reader(csv_file, delimiter=',')
         for row in reader:
-            readings.append(row)
+            i = 0
+            dict_row = {}
+            for i in range(4):   # format : id, email, name, uid
+                dict_row.update({fields[i]: row[i]})
+            readings.append(dict_row)
     return readings
 
 

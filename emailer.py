@@ -6,31 +6,57 @@ import argparse
 import sys
 import reader
 from subprocess import call
+import smtplib
 
 
 def main():
     p = argparse.ArgumentParser(description='Receives a file containing email addresses and sends messages to them')
-    p.add_argument('-i', '--input', metavar='input', type=str, help='The file containing all the information')
+    p.add_argument('-i', '--input', metavar='input', type=str, help='The file containing all user information')
+    p.add_argument('-m', '--message', metavar='msg', dest='msg', type=str, help='The file containing the email message')
     p.add_argument('-s', '--subject', metavar='subject', type=str, help='The subject line for the email')
 
     args = p.parse_args()
-    filename = args.input
+    #filename = args.input
     subject_line = args.subject
     # Saves the message into a single string
-    std_input = ''
-    for line in sys.stdin:
-        std_input += line
+    #print("Please enter the message:")
+    #std_input = ''
+    #for line in sys.stdin:
+    #    std_input += line
+
+    if args.msg:
+        msg_file = args.msg
+    else:
+        msg_file = "message"
+
+    if args.input:
+        filename = args.input
+    else:
+        filename = "datafile"
+
+    with open(msg_file) as mf:
+        msg = mf.read()
 
     emails = []
     if reader.file_exists(filename):
         readings = reader.open_csv_file(filename)
 
         for row in readings:
-            emails.append(generate_email_data(row, std_input, subject_line))
+            print(row)
+            emails.append(generate_email_data(row, msg, subject_line))
 
+        # test case
+        #emails.append({'email': "u5490127@anu.edu.au", 'message': "test message", 'subject': "Test Subtitle"})
+
+        print("Emails generated:")
+
+        count = 0
         for email in emails:
-            print("email", "-s", email.get('subject'), email.get('email'), "<<<", email.get('message'))
+            # print("email", "-s", email.get('subject'), email.get('email'), "<<<", email.get('message'))
             # call(["email", "-s", email.get('subject'), email.get('email'), "<<<", email.get('message')])
+            print("#", count, "    ", "Email: ", email.get('email'), "Title: ", email.get('subject'))
+            print("Message:")
+            print(email.get('message'))
     else:
         raise IOError('Please point to an existing file')
 
@@ -53,6 +79,8 @@ def generate_email_data(row, message, subject):
 
     return {'message': message, 'email': row.get('email'), 'subject': subject}
 
+def send_email():
+    pass
 
 if __name__ == '__main__':
     main()
