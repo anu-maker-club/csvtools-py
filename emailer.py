@@ -7,6 +7,8 @@ import sys
 import reader
 from subprocess import call
 import smtplib
+import datetime
+import os.path
 
 smtp_server = 'smtp.gmail.com'
 smtp_port = 587
@@ -14,75 +16,119 @@ smtp_port = 587
 
 def main():
     p = argparse.ArgumentParser(description='Receives a file containing email addresses and sends messages to them')
-    p.add_argument('-i', '--input', metavar='input', type=str, help='The file containing all user information')
+    p.add_argument('-d', '--datafile', metavar='datafile', type=str, help='The file containing all user information')
     p.add_argument('-m', '--message', metavar='msg', dest='msg', type=str, help='The file containing the email message')
     p.add_argument('-s', '--subject', metavar='subject', type=str, help='The subject line for the email')
     p.add_argument('-l', '--login', metavar='login', dest='smtp_login', type=str, help='Login email address')
     p.add_argument('-p', '--pass', metavar='password', dest='smtp_pass', type=str, help='The password for login')
+    p.add_argument('--mode', metavar='mode', dest='mode', type=str, help='Operation mode, options: show, send, default: show')
+    p.add_argument('--log', metavar='log', dest='log', type=str, help='Log file name')
 
     args = p.parse_args()
-    #filename = args.input
     subject_line = args.subject
-    # Saves the message into a single string
-    #print("Please enter the message:")
-    #std_input = ''
-    #for line in sys.stdin:
-    #    std_input += line
+
+    if args.mode:
+        mode = args.mode
+    else:
+        mode = 'show'
 
     if args.msg:
         msg_file = args.msg
     else:
         msg_file = "message"
 
-    if args.input:
-        filename = args.input
+    if args.datafile:
+        filename = args.datafile
     else:
         filename = "datafile"
+    if mode == 'send':
+        if not args.smtp_login:
+            print("Missing info: ", "Please provide login")
+            return
+        smtp_login = args.smtp_login
 
-    if not args.smtp_login:
-        print("Missing info: ", "Please provide login")
-        return
-    smtp_login = args.smtp_login
+        if not args.smtp_pass:
+            print("Missing info: ", "Please provide password")
+            return
+        smtp_pass = args.smtp_pass
 
-    if not args.smtp_pass:
-        print("Missing info: ", "Please provide password")
-        return
-    smtp_pass = args.smtp_pass
+    if args.log:
+        logfile = args.log
+    else:
+        logfile = "emailerlog_" + datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 
     with open(msg_file) as mf:
         msg = mf.read()
 
     emails = []
     if reader.file_exists(filename):
-        readings = reader.open_csv_file(filename)
-
-        for row in readings:
-            #print(row)
-            emails.append(generate_email_data(row, msg, subject_line))
-
-        # test case
-        #emails.append({'email': "u5490127@anu.edu.au", 'message': "test message", 'subject': "Test Subtitle"})
-
-        #print("Emails generated:")
-
-        # setup mailing client
-        print("Logging in")
-        mail_client = setup_mailer(smtp_login, smtp_pass)
-
-        if not mail_client:
-            print('Error encoutnered during emailer setup')
+        readings = reader.open_csv_file(filename, ['name', 'email'])
+        if readings == None:
+            print("Error encountered during reading of csv data file")
             return
 
-        count = 0
-        for email in emails:
-            # print("email", "-s", email.get('subject'), email.get('email'), "<<<", email.get('message'))
-            # call(["email", "-s", email.get('subject'), email.get('email'), "<<<", email.get('message')])
-            #print("#", count, "    ", "Email: ", email.get('email'), "Title: ", email.get('subject'))
-            #print("Message:")
-            #print(email.get('message'))
-            send_email(mail_client, smtp_login, email)
+        for row in readings:
+            email_data = generate_email_data(row, msg, subject_line)
+            if email_data == None:
+                print("Erorr encountered while generating emails")
+                return
+            emails.append(email_data)
 
+        if mode == 'show':
+            count = 0
+            for email in emails:
+                print("#", count, "    ", "Email: ", email.get('email'))
+                print("Title: ", email.get('subject'))
+                print("Message:")
+                print(email.get('message'))
+                count += 1
+                input("Press enter to continue...")
+            print("")
+            print("End of all emails")
+        elif mode == 'send':
+            # setup logging
+            interrupted_sends = []  # operate like a stack in below code
+            confirmed_sends = []
+            if os.path.isfile(logfile):
+                logfh = open(logfile, 'r')
+                logstr = logfh.read()
+                logentries = logstr.split('\n')
+                for entry in logentries:    # go through to find entries that indicate interrupted sending
+                    fields = entry.replace(' ', '').split(',')   # format : line, start/end
+                    if fields == ['']:
+                        continue
+                    if fields[1] == 'start':
+                        interrupted_sends.append(int(fields[0]))
+                    else:
+                        if interrupted_sends[len(interrupted_sends)-1] == int(fields[0]):
+                            interrupted_sends.remove(int(fields[0]))
+                            confirmed_sends.append(int(fields[0]))
+                logfh.close()
+                logfh = open(logfile, 'a')
+            else:
+                logfh = open(logfile, 'w')
 
+            # setup mailing client
+            print("Logging in")
+            mail_client = setup_mailer(smtp_login, smtp_pass)
+
+            if not mail_client:
+                print('Error encoutnered during emailer setup')
+                return
+
+            count = 0
+            for email in emails:
+                if count in confirmed_sends:
+                    continue
+                print(">Sending out email : ", count)
+                logfh.write(str(count) + ',' + "start" + "\n")
+                send_email(mail_client, smtp_login, email)
+                logfh.write(str(count) + ',' + "end" + "\n")
+                print("<Email sent")
+                count += 1
+            logfh.close()
+            print("")
+            print("All emails sent")
     else:
         raise IOError('Please point to an existing file')
 
@@ -96,6 +142,12 @@ def generate_email_data(row, message, subject):
     :param subject: String representing the subject line for the email.
     :return: Dict containing all information needed to send an email.
     """
+
+    if 'email' not in row or row.get('email') == '':
+        print("Missing email")
+        print("Row : ", row)
+        return None
+
     if 'name' not in row or row.get('name') == '':  # User has not inserted their name into database yet use uid again
         message = message.format(uid=row.get('uid'), id=row.get('id'), name=row.get('uid'))
         subject = subject.format(uid=row.get('uid'), id=row.get('id'), name=row.get('uid'))

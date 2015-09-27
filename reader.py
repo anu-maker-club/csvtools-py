@@ -67,7 +67,11 @@ def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
 def add_email(details):
     for entry in details:
         if 'email' not in entry or entry.get('email') == '':
-            entry['email'] = generate_email_from_uid(entry.get('uid'))
+            if 'uid' in entry and entry.get('uid') != '':
+                entry['email'] = generate_email_from_uid(entry.get('uid'))
+            else:
+                print("Missing email address")
+                return None
     return details
 
 
@@ -75,7 +79,7 @@ def generate_email_from_uid(uid):
     return uid + '@anu.edu.au'
 
 
-def open_csv_file(filename):
+def open_csv_file(filename, enforced_fields):
     """
     opens and reads in a csv file
 
@@ -83,16 +87,33 @@ def open_csv_file(filename):
     :returns: list of dictionaries with headers as keys to the dict
     """
     readings = []
-    i = 0
-    fields = ['id', 'email', 'name', 'uid']
+    line = 1
+    fields = []
     with open(filename, 'r', newline='') as csv_file:
         reader = csv.reader(csv_file, delimiter=',')
         for row in reader:
-            i = 0
+            if line == 1:   # gather available fields from header
+                for field in row:
+                    fields.append(''.join(filter(lambda x: x not in '"\'', field.strip())))
+                for enforced_field in enforced_fields:
+                    if enforced_field not in fields:
+                        print("datafile missing required fields")
+                        print("field missing :", enforced_field)
+                        return None
+                line += 1
+                continue
             dict_row = {}
-            for i in range(4):   # format : id, email, name, uid
-                row_str = ''.join(filter(lambda x: x not in '"\' ', row[i]))
-                print(row_str)
+            for i in range(len(fields)):
+                row_str = ''.join(filter(lambda x: x not in '"\'', row[i].strip()))
+                if fields[i] == 'name':
+                    row_str = row_str.title()
+                    if '/' in row_str:
+                        row_str2 = ""
+                        for c in row_str:
+                            if c == '/':
+                                break
+                            row_str2 += c
+                        row_str = row_str2.strip()
                 dict_row.update({fields[i]: row_str})
             readings.append(dict_row)
     return readings
