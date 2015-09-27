@@ -8,12 +8,17 @@ import reader
 from subprocess import call
 import smtplib
 
+smtp_server = 'smtp.gmail.com'
+smtp_port = 587
+
 
 def main():
     p = argparse.ArgumentParser(description='Receives a file containing email addresses and sends messages to them')
     p.add_argument('-i', '--input', metavar='input', type=str, help='The file containing all user information')
     p.add_argument('-m', '--message', metavar='msg', dest='msg', type=str, help='The file containing the email message')
     p.add_argument('-s', '--subject', metavar='subject', type=str, help='The subject line for the email')
+    p.add_argument('-l', '--login', metavar='login', dest='smtp_login', type=str, help='Login email address')
+    p.add_argument('-p', '--pass', metavar='password', dest='smtp_pass', type=str, help='The password for login')
 
     args = p.parse_args()
     #filename = args.input
@@ -34,6 +39,16 @@ def main():
     else:
         filename = "datafile"
 
+    if not args.smtp_login:
+        print("Missing info: ", "Please provide login")
+        return
+    smtp_login = args.smtp_login
+
+    if not args.smtp_pass:
+        print("Missing info: ", "Please provide password")
+        return
+    smtp_pass = args.smtp_pass
+
     with open(msg_file) as mf:
         msg = mf.read()
 
@@ -42,21 +57,32 @@ def main():
         readings = reader.open_csv_file(filename)
 
         for row in readings:
-            print(row)
+            #print(row)
             emails.append(generate_email_data(row, msg, subject_line))
 
         # test case
         #emails.append({'email': "u5490127@anu.edu.au", 'message': "test message", 'subject': "Test Subtitle"})
 
-        print("Emails generated:")
+        #print("Emails generated:")
+
+        # setup mailing client
+        print("Logging in")
+        mail_client = setup_mailer(smtp_login, smtp_pass)
+
+        if not mail_client:
+            print('Error encoutnered during emailer setup')
+            return
 
         count = 0
         for email in emails:
             # print("email", "-s", email.get('subject'), email.get('email'), "<<<", email.get('message'))
             # call(["email", "-s", email.get('subject'), email.get('email'), "<<<", email.get('message')])
-            print("#", count, "    ", "Email: ", email.get('email'), "Title: ", email.get('subject'))
-            print("Message:")
-            print(email.get('message'))
+            #print("#", count, "    ", "Email: ", email.get('email'), "Title: ", email.get('subject'))
+            #print("Message:")
+            #print(email.get('message'))
+            send_email(mail_client, smtp_login, email)
+
+
     else:
         raise IOError('Please point to an existing file')
 
@@ -79,8 +105,57 @@ def generate_email_data(row, message, subject):
 
     return {'message': message, 'email': row.get('email'), 'subject': subject}
 
-def send_email():
-    pass
+
+def setup_mailer(smtp_login, smtp_pass):
+    global smtp_server
+    global smtp_port
+    #print(smtp_server, smtp_login, smtp_pass)
+    smtp_client = smtplib.SMTP(smtp_server, smtp_port)
+    smtp_client.ehlo()
+
+    try:
+        smtp_client.starttls()
+    except smtplib.SMTPHeloError:
+        print("SMTP starttls failed, error : ", "SMTPHeloError")
+        print("Detail : ", "The server didn't reply properly to the HELO greeting")
+        return None
+    except smtplib.SMTPException:
+        print("SMTP starttls failed, error : ", "SMTPException")
+        print("Detail : ", "The server does not support the STARTTLS extension")
+        return None
+    except RuntimeError:
+        print("SMTP starttls failed, error : ", "SMTPException")
+        print("Detail : ", "SSL/TLS support is not available to your Python interpreter")
+        return None
+
+    smtp_client.ehlo()
+
+    try:
+        smtp_client.login(smtp_login, smtp_pass)
+    except smtplib.SMTPHeloError:
+        print("SMTP login failed, error : ", "SMTPHeloError")
+        print("Detail : ", "The server didn't reply properly to the HELO greeting")
+        return None
+    except smtplib.SMTPAuthenticationError:
+        print("SMTP login failed, error : ", "SMTPAuthenticationError")
+        print("Detail : ", "The server didn't accept the username/password combination")
+        return None
+    except smtplib.SMTPException:
+        print("SMTP login failed, error : ", "SMTPException")
+        print("Detail : ", "No suitable authentication method was found")
+        return None
+
+    return smtp_client
+
+
+def send_email(smtp_client, smtp_login, email):
+    header = 'To: ' + email.get('email') + '\n' + 'From: ' + smtp_login + '\n' + 'Subject:' + email.get('subject') + '\n'
+    try:
+        smtp_client.sendmail(smtp_login, email.get('email'), header + email.get('message'))
+    except smtplib.SMTPRecipientsRefused:
+        print("SMTP send failed, error : ", "SMTPRecipientRefused")
+        print("Detailed : ", "All recipients were refused, no one got the email")
+
 
 if __name__ == '__main__':
     main()

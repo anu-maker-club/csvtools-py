@@ -91,7 +91,9 @@ def open_csv_file(filename):
             i = 0
             dict_row = {}
             for i in range(4):   # format : id, email, name, uid
-                dict_row.update({fields[i]: row[i]})
+                row_str = ''.join(filter(lambda x: x not in '"\' ', row[i]))
+                print(row_str)
+                dict_row.update({fields[i]: row_str})
             readings.append(dict_row)
     return readings
 
