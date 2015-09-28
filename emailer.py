@@ -9,6 +9,7 @@ from subprocess import call
 import smtplib
 import datetime
 import os.path
+import time
 
 smtp_server = 'smtp.gmail.com'
 smtp_port = 587
@@ -120,11 +121,14 @@ def main():
             for email in emails:
                 if count in confirmed_sends:
                     continue
-                print(">Sending out email : ", count)
-                logfh.write(str(count) + ',' + "start" + "\n")
-                send_email(mail_client, smtp_login, email)
-                logfh.write(str(count) + ',' + "end" + "\n")
-                print("<Email sent")
+                print(">Sending out email : ", count)           # print to console
+                logfh.write(str(count) + ',' + "start" + "\n")  # write to log
+
+                send_email(mail_client, smtp_login, email)      # send email
+                time.sleep(0.5)                                 # delay to avoid overloading network
+
+                logfh.write(str(count) + ',' + "end" + "\n")    # print to console
+                print("<Email sent")                            # write to log
                 count += 1
             logfh.close()
             print("")
