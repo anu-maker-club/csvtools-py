@@ -179,11 +179,12 @@ def main():
             continue
 
         if words[0] == "modify":
+            if words[1] == "?":
+                print("entry")
+                print("field")
+                continue
             if not file_opened:
                 print("modify : no file opened yet")
-                continue
-            if len(words) <= 2:
-                print("modify : too few arguments")
                 continue
             if words[1] == "entry":
                 if len(words) < 3:
@@ -200,6 +201,12 @@ def main():
                 interface_modify_entry(config_header, regex_obj_arr, config_settings, data_rows[entry_id])
                 continue
 
+            if words[1] == "field":
+                if len(words) > 2:
+                    print("modify : too many arguments")
+                    continue
+                interface_modify_field(config_header, regex_obj_arr, config_settings,data_rows)
+                continue
             # default of "modify"
             print("modify : command not recognised")
             continue
@@ -435,11 +442,13 @@ def open_csv_file(filename):
                 if regex_obj_arr != None:
                     if len(config_header) != len(regex_obj_arr):
                         print("open : length of config_header is not consistent with config_regex")
+                        return None
             elif row[0] == "config_regex":
                 regex_obj_arr = parse_config_regex(row)
                 if config_header != None:
                     if len(regex_obj_arr) != len(config_header):
-                        print("open : length of config_regex is not consistent with config_regex")
+                        print("open : length of config_regex is not consistent with config_header")
+                        return None
             elif row[0] == "config_settings":
                 config_settings = parse_config_settings(row)
             else:   # processing data rows, all three configs must be present
